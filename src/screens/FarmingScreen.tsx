@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -9,11 +9,10 @@ import {
   useColorScheme,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Home: undefined;
-  Farming: undefined;
-};
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useLanguage } from '../context/LanguageContext';
+import { speak, stopSpeaking } from '../services/ttsService';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type FarmingScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Farming'>;
@@ -21,6 +20,8 @@ type FarmingScreenProps = {
 
 function FarmingScreen({ navigation }: FarmingScreenProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const { t, language } = useLanguage();
+  const [speakingId, setSpeakingId] = React.useState<number | null>(null);
 
   const backgroundColor = isDarkMode ? '#121212' : '#F5F5F5';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
@@ -29,47 +30,108 @@ function FarmingScreen({ navigation }: FarmingScreenProps): React.JSX.Element {
   const borderColor = isDarkMode ? '#333' : '#E0E0E0';
   const iconBg = isDarkMode ? '#2E7D32' : '#E8F5E9';
 
-  const topics = [
-    { id: 1, title: 'Crop Cultivation', icon: '🌱', description: 'Best practices for growing crops' },
-    { id: 2, title: 'Pest Control', icon: '🐛', description: 'Organic pest management techniques' },
-    { id: 3, title: 'Irrigation', icon: '💧', description: 'Water management and irrigation tips' },
-    { id: 4, title: 'Fertilizers', icon: '🌿', description: 'Choosing the right fertilizers' },
-    { id: 5, title: 'Market Prices', icon: '💰', description: 'Current market rates and trends' },
-    { id: 6, title: 'Weather Updates', icon: '🌤️', description: 'Weather forecasts for farming' },
-  ];
+  // ✅ Multilingual topics
+  const topics = useMemo(() => [
+    {
+      id: 1,
+      title: t.cropCultivation,
+      icon: '🌱',
+      description: t.cropCultivationDesc,
+    },
+    {
+      id: 2,
+      title: t.pestControl,
+      icon: '🐛',
+      description: t.pestControlDesc,
+    },
+    {
+      id: 3,
+      title: t.irrigation,
+      icon: '💧',
+      description: t.irrigationDesc,
+    },
+    {
+      id: 4,
+      title: t.organicFarming,
+      icon: '🌿',
+      description: t.organicFarmingDesc,
+    },
+    {
+      id: 5,
+      title: t.marketPrices,
+      icon: '💰',
+      description: t.marketPricesDesc,
+    },
+    {
+      id: 6,
+      title: t.weatherForecast,
+      icon: '🌤️',
+      description: t.weatherForecastDesc,
+    },
+  ], [t]);
+
+  const handlePress = async (topic: typeof topics[0]) => {
+    try {
+      if (speakingId === topic.id) {
+        stopSpeaking();
+        setSpeakingId(null);
+        return;
+      }
+
+      stopSpeaking();
+      setSpeakingId(topic.id);
+
+      await speak(`${topic.title}. ${topic.description}`, language);
+
+      setSpeakingId(null);
+    } catch (error) {
+      console.log('Speech error:', error);
+      setSpeakingId(null);
+    }
+  };
+
+  // ✅ stop audio when leaving screen
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-
+      
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <TouchableOpacity
-          style={styles.backButton}
+          accessibilityLabel={t.back}
           onPress={() => navigation.goBack()}
+          style={styles.backButton}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>← {t.back}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerContent}>
           <Text style={styles.headerIcon}>🌾</Text>
-          <Text style={[styles.headerTitle, { color: textColor }]}>Farming</Text>
+          <Text style={[styles.headerTitle, { color: textColor }]}>
+            {t.farming}
+          </Text>
           <Text style={[styles.headerSubtitle, { color: subtitleColor }]}>
-            Agricultural Information
+            {t.farmingDesc}
           </Text>
         </View>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {topics.map((topic) => (
           <TouchableOpacity
             key={topic.id}
-            style={[styles.topicCard, { backgroundColor: cardBackground }]}
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log(topic.title);
-              // future: trigger voice playback here
-            }}
+            accessibilityLabel={topic.title}
+            activeOpacity={0.75}
+            style={[
+              styles.topicCard,
+              { backgroundColor: cardBackground },
+              speakingId === topic.id && styles.playingCard,
+            ]}
+            onPress={() => handlePress(topic)}
           >
             <View style={[styles.topicIconContainer, { backgroundColor: iconBg }]}>
               <Text style={styles.topicIcon}>{topic.icon}</Text>
@@ -84,19 +146,21 @@ function FarmingScreen({ navigation }: FarmingScreenProps): React.JSX.Element {
               </Text>
             </View>
 
-            <Text style={styles.arrow}>→</Text>
+            {speakingId === topic.id ? (
+              <Icon name="stop-circle" size={28} color="#F44336" />
+            ) : (
+              <Icon name="play-circle" size={28} color="#4CAF50" />
+            )}
           </TouchableOpacity>
         ))}
       </ScrollView>
-
     </SafeAreaView>
   );
 }
+export default FarmingScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
 
   header: {
     padding: 20,
@@ -146,6 +210,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
+  playingCard: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    elevation: 5,
+  },
+
   topicIconContainer: {
     width: 50,
     height: 50,
@@ -172,11 +242,4 @@ const styles = StyleSheet.create({
   topicDescription: {
     fontSize: 13,
   },
-
-  arrow: {
-    fontSize: 20,
-    color: '#2196F3',
-  },
 });
-
-export default FarmingScreen;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -9,11 +9,10 @@ import {
   useColorScheme,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Home: undefined;
-  Education: undefined;
-};
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useLanguage } from '../context/LanguageContext';
+import { speak, stopSpeaking } from '../services/ttsService';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type EducationScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Education'>;
@@ -21,6 +20,8 @@ type EducationScreenProps = {
 
 function EducationScreen({ navigation }: EducationScreenProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const { t, language } = useLanguage();
+  const [speakingId, setSpeakingId] = React.useState<number | null>(null);
 
   const backgroundColor = isDarkMode ? '#121212' : '#F5F5F5';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
@@ -31,16 +32,36 @@ function EducationScreen({ navigation }: EducationScreenProps): React.JSX.Elemen
   const infoTextColor = isDarkMode ? '#E1BEE7' : '#7B1FA2';
   const iconBg = isDarkMode ? '#6A1B9A' : '#F3E5F5';
 
-  const topics = [
-    { id: 1, title: 'Basic Literacy', icon: '📖', description: 'Learn to read and write in your language' },
-    { id: 2, title: 'Financial Literacy', icon: '💳', description: 'Banking, savings, and money management' },
-    { id: 3, title: 'Digital Skills', icon: '💻', description: 'Using smartphone, internet, and apps' },
-    { id: 4, title: 'Children Education', icon: '👶', description: 'School enrollment, homework help' },
-    { id: 5, title: 'Adult Education Programs', icon: '👨‍🎓', description: 'Government literacy programs for adults' },
-    { id: 6, title: 'Skill Development', icon: '🔧', description: 'Vocational training and skills' },
-    { id: 7, title: 'Online Learning', icon: '📱', description: 'Free online courses and resources' },
-    { id: 8, title: 'Career Guidance', icon: '🎯', description: 'Job opportunities and career paths' },
-  ];
+  const topics = useMemo(() => [
+    { id: 1, icon: '📖', title: t.basicLiteracy, description: t.basicLiteracyDesc },
+    { id: 2, icon: '💳', title: t.financialLiteracy, description: t.financialLiteracyDesc },
+    { id: 3, icon: '💻', title: t.digitalSkills, description: t.digitalSkillsDesc },
+    { id: 4, icon: '👶', title: t.childrenEducation, description: t.childrenEducationDesc },
+    { id: 5, icon: '👨‍🎓', title: t.adultEducation, description: t.adultEducationDesc },
+    { id: 6, icon: '🔧', title: t.skillDevelopment, description: t.skillDevelopmentDesc },
+    { id: 7, icon: '📱', title: t.onlineLearning, description: t.onlineLearningDesc },
+    { id: 8, icon: '🎯', title: t.careerGuidance, description: t.careerGuidanceDesc },
+  ], [t]);
+
+  const handlePress = async (topic: typeof topics[0]) => {
+    if (speakingId === topic.id) {
+      stopSpeaking();
+      setSpeakingId(null);
+      return;
+    }
+
+    stopSpeaking();
+    setSpeakingId(topic.id);
+
+    await speak(`${topic.title}. ${topic.description}`, language);
+
+    setSpeakingId(null);
+  };
+
+  // stop speech when leaving screen
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
@@ -48,41 +69,44 @@ function EducationScreen({ navigation }: EducationScreenProps): React.JSX.Elemen
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <TouchableOpacity
+          accessibilityLabel={t.back}
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>← {t.back}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerContent}>
           <Text style={styles.headerIcon}>🎓</Text>
-          <Text style={[styles.headerTitle, { color: textColor }]}>Education</Text>
+          <Text style={[styles.headerTitle, { color: textColor }]}>
+            {t.education}
+          </Text>
           <Text style={[styles.headerSubtitle, { color: subtitleColor }]}>
-            Learning & Skill Development
+            {t.educationDesc}
           </Text>
         </View>
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* Info Box */}
         <View style={[styles.infoBox, { backgroundColor: infoBg }]}>
           <Text style={styles.infoIcon}>💡</Text>
           <Text style={[styles.infoText, { color: infoTextColor }]}>
-            Education is the key to progress. Learn at your own pace with voice-guided lessons!
+            {t.educationInfo}
           </Text>
         </View>
 
         {topics.map((topic) => (
           <TouchableOpacity
             key={topic.id}
-            style={[styles.topicCard, { backgroundColor: cardBackground }]}
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log(topic.title);
-              // future: voice lessons & AI guidance
-            }}
+            activeOpacity={0.75}
+            style={[
+              styles.topicCard,
+              { backgroundColor: cardBackground },
+              speakingId === topic.id && styles.playingCard,
+            ]}
+            onPress={() => handlePress(topic)}
           >
             <View style={[styles.topicIconContainer, { backgroundColor: iconBg }]}>
               <Text style={styles.topicIcon}>{topic.icon}</Text>
@@ -97,44 +121,30 @@ function EducationScreen({ navigation }: EducationScreenProps): React.JSX.Elemen
               </Text>
             </View>
 
-            <Text style={styles.arrow}>→</Text>
+            {speakingId === topic.id ? (
+              <Icon name="stop-circle" size={28} color="#F44336" />
+            ) : (
+              <Icon name="play-circle" size={28} color="#9C27B0" />
+            )}
           </TouchableOpacity>
         ))}
-
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+export default EducationScreen;
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-
+  header: { padding: 20, borderBottomWidth: 1 },
   backButton: { marginBottom: 15 },
-
-  backButtonText: {
-    fontSize: 16,
-    color: '#9C27B0',
-    fontWeight: '500',
-  },
+  backButtonText: { fontSize: 16, color: '#9C27B0', fontWeight: '500' },
 
   headerContent: { alignItems: 'center' },
-
-  headerIcon: {
-    fontSize: 50,
-    marginBottom: 10,
-  },
-
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-
+  headerIcon: { fontSize: 50, marginBottom: 10 },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 5 },
   headerSubtitle: { fontSize: 14 },
 
   content: { flex: 1, padding: 15 },
@@ -147,16 +157,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  infoIcon: {
-    fontSize: 24,
-    marginRight: 10,
-  },
-
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-  },
+  infoIcon: { fontSize: 24, marginRight: 10 },
+  infoText: { flex: 1, fontSize: 13, lineHeight: 18 },
 
   topicCard: {
     flexDirection: 'row',
@@ -165,6 +167,12 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 12,
     elevation: 2,
+  },
+
+  playingCard: {
+    borderWidth: 2,
+    borderColor: '#9C27B0',
+    elevation: 5,
   },
 
   topicIconContainer: {
@@ -177,24 +185,8 @@ const styles = StyleSheet.create({
   },
 
   topicIcon: { fontSize: 25 },
-
   topicContent: { flex: 1 },
 
-  topicTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 3,
-  },
-
-  topicDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  arrow: {
-    fontSize: 20,
-    color: '#9C27B0',
-  },
+  topicTitle: { fontSize: 16, fontWeight: '600', marginBottom: 3 },
+  topicDescription: { fontSize: 13, lineHeight: 18 },
 });
-
-export default EducationScreen;

@@ -12,14 +12,9 @@ import {
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-type RootStackParamList = {
-  Home: undefined;
-  Farming: undefined;
-  Health: undefined;
-  Government: undefined;
-  Education: undefined;
-};
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelector from '../components/LanguageSelector';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -27,32 +22,20 @@ type HomeScreenProps = {
 
 function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const { t } = useLanguage();
 
-  // ✅ Loading state
   const [isLoading, setIsLoading] = React.useState(true);
+  const [showLanguageSelector, setShowLanguageSelector] = React.useState(false);
 
   React.useEffect(() => {
-    setTimeout(() => setIsLoading(false), 1000);
+    const timer = setTimeout(() => setIsLoading(false), 900);
+    return () => clearTimeout(timer);
   }, []);
 
   const backgroundColor = isDarkMode ? '#121212' : '#F5F5F5';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
   const subtitleColor = isDarkMode ? '#B0B0B0' : '#424242';
   const cardBackground = isDarkMode ? '#1E1E1E' : '#FFFFFF';
-
-  // ✅ Loading Screen
-  if (isLoading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
-          <Text style={[styles.loadingText, { color: textColor }]}>
-            Loading VoiceForAll...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <>
@@ -62,141 +45,150 @@ function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
       />
 
       <SafeAreaView style={[styles.container, { backgroundColor }]}>
-        <ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false}>
 
-          {/* HEADER */}
-          <View style={styles.header}>
-            <Text style={styles.title}>VoiceForAll</Text>
-            <Text style={[styles.subtitle, { color: subtitleColor }]}>
-              सभी के लिए आवाज़
-            </Text>
-            <Text style={[styles.tagline, { color: subtitleColor }]}>
-              Voice-Based Information for Everyone
-            </Text>
-          </View>
-
-          {/* CATEGORY CARDS */}
-          <View style={styles.categoriesContainer}>
-
-            {/* Farming */}
-            <TouchableOpacity
-              style={[styles.card, { backgroundColor: cardBackground }]}
-              onPress={() => navigation.navigate('Farming')}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: '#4CAF50' }]}>
-                <Icon name="tractor" size={40} color="#FFF" />
-              </View>
-              <Text style={[styles.cardTitle, { color: textColor }]}>Farming</Text>
-              <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
-                Agricultural tips & info
+          {/* LOADING */}
+          {isLoading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2196F3" />
+              <Text style={[styles.loadingText, { color: textColor }]}>
+                {t.loading}
               </Text>
-              <Text style={styles.tapHint}>Tap to explore →</Text>
-            </TouchableOpacity>
-
-            {/* Health */}
-            <TouchableOpacity
-              style={[styles.card, { backgroundColor: cardBackground }]}
-              onPress={() => navigation.navigate('Health')}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: '#2196F3' }]}>
-                <Icon name="hospital-box" size={40} color="#FFF" />
-              </View>
-              <Text style={[styles.cardTitle, { color: textColor }]}>Health</Text>
-              <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
-                Health & wellness advice
-              </Text>
-              <Text style={styles.tapHint}>Tap to explore →</Text>
-            </TouchableOpacity>
-
-            {/* Government */}
-            <TouchableOpacity
-              style={[styles.card, { backgroundColor: cardBackground }]}
-              onPress={() => navigation.navigate('Government')}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: '#FF9800' }]}>
-                <Icon name="office-building" size={40} color="#FFF" />
-              </View>
-              <Text style={[styles.cardTitle, { color: textColor }]}>Government</Text>
-              <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
-                Schemes & benefits
-              </Text>
-              <Text style={styles.tapHint}>Tap to explore →</Text>
-            </TouchableOpacity>
-
-            {/* Education */}
-            <TouchableOpacity
-              style={[styles.card, { backgroundColor: cardBackground }]}
-              onPress={() => navigation.navigate('Education')}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' }]}>
-                <Icon name="school" size={40} color="#FFF" />
-              </View>
-              <Text style={[styles.cardTitle, { color: textColor }]}>Education</Text>
-              <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
-                Learning resources
-              </Text>
-              <Text style={styles.tapHint}>Tap to explore →</Text>
-            </TouchableOpacity>
-
-          </View>
-
-          {/* FEATURES */}
-          <View style={styles.featuresSection}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Key Features
-            </Text>
-
-            <View style={styles.featureItem}>
-              <Icon name="microphone" size={28} color="#2196F3" style={styles.featureIcon}/>
-              <View style={styles.featureText}>
-                <Text style={[styles.featureTitle, { color: textColor }]}>
-                  Voice-Based Interface
-                </Text>
-                <Text style={[styles.featureDescription, { color: subtitleColor }]}>
-                  No reading required - everything through voice
-                </Text>
-              </View>
             </View>
+          )}
 
-            <View style={styles.featureItem}>
-              <Icon name="web" size={28} color="#4CAF50" style={styles.featureIcon}/>
-              <View style={styles.featureText}>
-                <Text style={[styles.featureTitle, { color: textColor }]}>
-                  Multiple Languages
-                </Text>
-                <Text style={[styles.featureDescription, { color: subtitleColor }]}>
-                  Hindi, Marathi, Tamil & more
-                </Text>
-              </View>
-            </View>
+          {!isLoading && (
+            <>
+              {/* HEADER */}
+              <View style={styles.header}>
+                <Text style={styles.title}>{t.appName}</Text>
 
-            <View style={styles.featureItem}>
-              <Icon name="cellphone-check" size={28} color="#FF9800" style={styles.featureIcon}/>
-              <View style={styles.featureText}>
-                <Text style={[styles.featureTitle, { color: textColor }]}>
-                  Simple & Easy
+                <Text style={[styles.subtitle, { color: subtitleColor }]}>
+                  {t.subtitle}
                 </Text>
-                <Text style={[styles.featureDescription, { color: subtitleColor }]}>
-                  Designed for everyone
+
+                <Text style={[styles.tagline, { color: subtitleColor }]}>
+                  {t.tagline}
                 </Text>
+
+                {/* Language Selector */}
+                <TouchableOpacity
+                  style={styles.languageButton}
+                  onPress={() => setShowLanguageSelector(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.selectLanguage}
+                >
+                  <Text style={styles.languageButtonText}>
+                    🌐 {t.selectLanguage}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-          </View>
+
+              {/* CATEGORY CARDS */}
+              <View style={styles.categoriesContainer}>
+
+                {/* Farming */}
+                <TouchableOpacity
+                  accessibilityLabel={t.farming}
+                  accessibilityRole="button"
+                  accessibilityHint={t.tapToListen}
+                  activeOpacity={0.85}
+                  style={[styles.card, { backgroundColor: cardBackground }]}
+                  onPress={() => navigation.navigate('Farming')}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: '#4CAF50' }]}>
+                    <Icon name="tractor" size={40} color="#FFF" />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>{t.farming}</Text>
+                  <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
+                    {t.farmingDesc}
+                  </Text>
+                  <Text style={styles.tapHint}>{t.tapToListen}</Text>
+                </TouchableOpacity>
+
+                {/* Health */}
+                <TouchableOpacity
+                  accessibilityLabel={t.health}
+                  accessibilityRole="button"
+                  accessibilityHint={t.tapToListen}
+                  activeOpacity={0.85}
+                  style={[styles.card, { backgroundColor: cardBackground }]}
+                  onPress={() => navigation.navigate('Health')}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: '#2196F3' }]}>
+                    <Icon name="hospital-box" size={40} color="#FFF" />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>{t.health}</Text>
+                  <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
+                    {t.healthDesc}
+                  </Text>
+                  <Text style={styles.tapHint}>{t.tapToListen}</Text>
+                </TouchableOpacity>
+
+                {/* Government */}
+                <TouchableOpacity
+                  accessibilityLabel={t.government}
+                  accessibilityRole="button"
+                  accessibilityHint={t.tapToListen}
+                  activeOpacity={0.85}
+                  style={[styles.card, { backgroundColor: cardBackground }]}
+                  onPress={() => navigation.navigate('Government')}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: '#FF9800' }]}>
+                    <Icon name="office-building" size={40} color="#FFF" />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>{t.government}</Text>
+                  <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
+                    {t.governmentDesc}
+                  </Text>
+                  <Text style={styles.tapHint}>{t.tapToListen}</Text>
+                </TouchableOpacity>
+
+                {/* Education */}
+                <TouchableOpacity
+                  accessibilityLabel={t.education}
+                  accessibilityRole="button"
+                  accessibilityHint={t.tapToListen}
+                  activeOpacity={0.85}
+                  style={[styles.card, { backgroundColor: cardBackground }]}
+                  onPress={() => navigation.navigate('Education')}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' }]}>
+                    <Icon name="school" size={40} color="#FFF" />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>{t.education}</Text>
+                  <Text style={[styles.cardSubtitle, { color: subtitleColor }]}>
+                    {t.educationDesc}
+                  </Text>
+                  <Text style={styles.tapHint}>{t.tapToListen}</Text>
+                </TouchableOpacity>
+
+              </View>
+            </>
+          )}
 
         </ScrollView>
       </SafeAreaView>
+
+      {/* LANGUAGE SELECTOR */}
+      <LanguageSelector
+        visible={showLanguageSelector}
+        onClose={() => setShowLanguageSelector(false)}
+      />
     </>
   );
 }
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    paddingTop: 80,
     alignItems: 'center',
   },
+
   loadingText: {
     marginTop: 15,
     fontSize: 16,
@@ -206,13 +198,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 40,
   },
+
   title: {
     fontSize: 42,
     fontWeight: 'bold',
     color: '#2196F3',
   },
-  subtitle: { fontSize: 20, marginTop: 6 },
-  tagline: { fontSize: 14, fontStyle: 'italic', marginTop: 6 },
+
+  subtitle: {
+    fontSize: 20,
+    marginTop: 6,
+  },
+
+  tagline: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    marginTop: 6,
+  },
+
+  languageButton: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+
+  languageButtonText: {
+    color: '#2196F3',
+    fontSize: 15,
+    fontWeight: '600',
+  },
 
   categoriesContainer: {
     flexDirection: 'row',
@@ -228,10 +246,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     alignItems: 'center',
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
   },
 
   iconContainer: {
@@ -244,17 +258,16 @@ const styles = StyleSheet.create({
   },
 
   cardTitle: { fontSize: 16, fontWeight: '600' },
-  cardSubtitle: { fontSize: 12, textAlign: 'center', marginBottom: 8 },
-  tapHint: { fontSize: 11, color: '#2196F3', fontWeight: '500' },
 
-  featuresSection: { paddingHorizontal: 20, marginTop: 20 },
-  sectionTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
+  cardSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
 
-  featureItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  featureIcon: { marginRight: 15 },
-  featureText: { flex: 1 },
-  featureTitle: { fontSize: 16, fontWeight: '600' },
-  featureDescription: { fontSize: 14 },
+  tapHint: {
+    fontSize: 13,
+    color: '#2196F3',
+    fontWeight: '500',
+  },
 });
-
-export default HomeScreen;

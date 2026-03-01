@@ -8,12 +8,11 @@ import {
   TouchableOpacity,
   useColorScheme,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Home: undefined;
-  Health: undefined;
-};
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useLanguage } from '../context/LanguageContext';
+import { speak, stopSpeaking } from '../services/ttsService';
 
 type HealthScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Health'>;
@@ -21,6 +20,8 @@ type HealthScreenProps = {
 
 function HealthScreen({ navigation }: HealthScreenProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const { t, language } = useLanguage();
+  const [speakingId, setSpeakingId] = React.useState<number | null>(null);
 
   const backgroundColor = isDarkMode ? '#121212' : '#F5F5F5';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
@@ -30,13 +31,24 @@ function HealthScreen({ navigation }: HealthScreenProps): React.JSX.Element {
   const iconBg = isDarkMode ? '#1565C0' : '#E3F2FD';
 
   const topics = [
-    { id: 1, title: 'Common Diseases', icon: '🦠', description: 'Symptoms and prevention' },
-    { id: 2, title: 'First Aid', icon: '🩹', description: 'Emergency medical help' },
-    { id: 3, title: 'Nutrition', icon: '🥗', description: 'Healthy eating habits' },
-    { id: 4, title: 'Mental Health', icon: '🧠', description: 'Well-being and stress management' },
-    { id: 5, title: 'Vaccination', icon: '💉', description: 'Immunization schedules' },
-    { id: 6, title: 'Hygiene', icon: '🧼', description: 'Sanitation and cleanliness' },
+    { id: 1, icon: '🦠', title: t.commonDiseases,  description: t.commonDiseasesDesc },
+    { id: 2, icon: '🩹', title: t.firstAid,        description: t.firstAidDesc },
+    { id: 3, icon: '🥗', title: t.nutrition,       description: t.nutritionDesc },
+    { id: 4, icon: '🧠', title: t.mentalHealth,    description: t.mentalHealthDesc },
+    { id: 5, icon: '💉', title: t.vaccination,     description: t.vaccinationDesc },
+    { id: 6, icon: '🧼', title: t.hygiene,         description: t.hygieneDesc },
   ];
+
+  const handlePress = async (topic: typeof topics[0]) => {
+    if (speakingId === topic.id) {
+      stopSpeaking();
+      setSpeakingId(null);
+      return;
+    }
+    setSpeakingId(topic.id);
+    await speak(`${topic.title}. ${topic.description}`, language);
+    setTimeout(() => setSpeakingId(null), 5000);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
@@ -44,47 +56,50 @@ function HealthScreen({ navigation }: HealthScreenProps): React.JSX.Element {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <TouchableOpacity
+          accessibilityLabel={t.back}
+          accessibilityRole="button"
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>← {t.back}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerContent}>
           <Text style={styles.headerIcon}>🏥</Text>
-          <Text style={[styles.headerTitle, { color: textColor }]}>Health</Text>
-          <Text style={[styles.headerSubtitle, { color: subtitleColor }]}>
-            Health & Wellness Information
-          </Text>
+          <Text style={[styles.headerTitle, { color: textColor }]}>{t.health}</Text>
+          <Text style={[styles.headerSubtitle, { color: subtitleColor }]}>{t.healthDesc}</Text>
         </View>
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content}>
+      {/* Topics */}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {topics.map((topic) => (
           <TouchableOpacity
             key={topic.id}
-            style={[styles.topicCard, { backgroundColor: cardBackground }]}
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log(topic.title);
-              // future: voice playback / health tips
-            }}
+            accessibilityLabel={topic.title}
+            accessibilityRole="button"
+            activeOpacity={0.75}
+            style={[
+              styles.topicCard,
+              { backgroundColor: cardBackground },
+              speakingId === topic.id && styles.playingCard,
+            ]}
+            onPress={() => handlePress(topic)}
           >
             <View style={[styles.topicIconContainer, { backgroundColor: iconBg }]}>
               <Text style={styles.topicIcon}>{topic.icon}</Text>
             </View>
 
             <View style={styles.topicContent}>
-              <Text style={[styles.topicTitle, { color: textColor }]}>
-                {topic.title}
-              </Text>
-              <Text style={[styles.topicDescription, { color: subtitleColor }]}>
-                {topic.description}
-              </Text>
+              <Text style={[styles.topicTitle, { color: textColor }]}>{topic.title}</Text>
+              <Text style={[styles.topicDescription, { color: subtitleColor }]}>{topic.description}</Text>
             </View>
 
-            <Text style={styles.arrow}>→</Text>
+            {speakingId === topic.id ? (
+              <Icon name="stop-circle" size={28} color="#F44336" accessible={false} />
+            ) : (
+              <Icon name="play-circle" size={28} color="#2196F3" accessible={false} />
+            )}
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -94,89 +109,28 @@ function HealthScreen({ navigation }: HealthScreenProps): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-
-  backButton: {
-    marginBottom: 15,
-  },
-
-  backButtonText: {
-    fontSize: 16,
-    color: '#2196F3',
-    fontWeight: '500',
-  },
-
-  headerContent: {
-    alignItems: 'center',
-  },
-
-  headerIcon: {
-    fontSize: 50,
-    marginBottom: 10,
-  },
-
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-
-  headerSubtitle: {
-    fontSize: 14,
-  },
-
-  content: {
-    flex: 1,
-    padding: 15,
-  },
-
+  container: { flex: 1 },
+  header: { padding: 20, borderBottomWidth: 1 },
+  backButton: { marginBottom: 15 },
+  backButtonText: { fontSize: 16, color: '#2196F3', fontWeight: '500' },
+  headerContent: { alignItems: 'center' },
+  headerIcon: { fontSize: 50, marginBottom: 10 },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 5 },
+  headerSubtitle: { fontSize: 14 },
+  content: { flex: 1, padding: 15 },
   topicCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
-    elevation: 2,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: 12, padding: 15, marginBottom: 12, elevation: 2,
   },
-
+  playingCard: { borderWidth: 2, borderColor: '#2196F3', elevation: 5 },
   topicIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
+    width: 50, height: 50, borderRadius: 25,
+    justifyContent: 'center', alignItems: 'center', marginRight: 15,
   },
-
-  topicIcon: {
-    fontSize: 25,
-  },
-
-  topicContent: {
-    flex: 1,
-  },
-
-  topicTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 3,
-  },
-
-  topicDescription: {
-    fontSize: 13,
-  },
-
-  arrow: {
-    fontSize: 20,
-    color: '#2196F3',
-  },
+  topicIcon: { fontSize: 25 },
+  topicContent: { flex: 1 },
+  topicTitle: { fontSize: 16, fontWeight: '600', marginBottom: 3 },
+  topicDescription: { fontSize: 13, lineHeight: 18 },
 });
 
 export default HealthScreen;

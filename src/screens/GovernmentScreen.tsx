@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -9,11 +9,10 @@ import {
   useColorScheme,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Home: undefined;
-  Government: undefined;
-};
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useLanguage } from '../context/LanguageContext';
+import { speak, stopSpeaking } from '../services/ttsService';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type GovernmentScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Government'>;
@@ -21,6 +20,9 @@ type GovernmentScreenProps = {
 
 function GovernmentScreen({ navigation }: GovernmentScreenProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const { t, language } = useLanguage();
+
+  const [speakingId, setSpeakingId] = React.useState<number | null>(null);
 
   const backgroundColor = isDarkMode ? '#121212' : '#F5F5F5';
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
@@ -31,18 +33,38 @@ function GovernmentScreen({ navigation }: GovernmentScreenProps): React.JSX.Elem
   const infoTextColor = isDarkMode ? '#BBDEFB' : '#1976D2';
   const iconBg = isDarkMode ? '#E65100' : '#FFF3E0';
 
-  const topics = [
-    { id: 1, title: 'PM-KISAN Scheme', icon: '💰', description: '₹6000/year for farmers - eligibility & application' },
-    { id: 2, title: 'Ayushman Bharat', icon: '🏥', description: 'Free health coverage up to ₹5 lakh' },
-    { id: 3, title: 'Ration Card', icon: '🌾', description: 'How to apply for ration card online' },
-    { id: 4, title: 'Pension Schemes', icon: '👴', description: 'Old age, widow & disability pensions' },
-    { id: 5, title: 'Aadhaar Services', icon: '🆔', description: 'Update Aadhaar, link with bank account' },
-    { id: 6, title: 'Jan Dhan Account', icon: '🏦', description: 'Zero balance bank account benefits' },
-    { id: 7, title: 'Pradhan Mantri Awas Yojana', icon: '🏠', description: 'Housing scheme for rural & urban poor' },
-    { id: 8, title: 'Ujjwala Scheme', icon: '⛽', description: 'Free LPG connection for poor families' },
-    { id: 9, title: 'Soil Health Card', icon: '🌱', description: 'Get your farm soil tested for free' },
-    { id: 10, title: 'Scholarship Programs', icon: '🎓', description: 'Education scholarships for students' },
-  ];
+  const topics = useMemo(() => [
+    { id: 1, icon: '💰', title: t.pmKisan, description: t.pmKisanDesc },
+    { id: 2, icon: '🏥', title: t.ayushmanBharat, description: t.ayushmanBharatDesc },
+    { id: 3, icon: '🌾', title: t.rationCard, description: t.rationCardDesc },
+    { id: 4, icon: '👴', title: t.pensionSchemes, description: t.pensionSchemesDesc },
+    { id: 5, icon: '🆔', title: t.aadhaarServices, description: t.aadhaarServicesDesc },
+    { id: 6, icon: '🏦', title: t.janDhan, description: t.janDhanDesc },
+    { id: 7, icon: '🏠', title: t.awasYojana, description: t.awasYojanaDesc },
+    { id: 8, icon: '⛽', title: t.ujjwalaScheme, description: t.ujjwalaSchemeDesc },
+    { id: 9, icon: '🌱', title: t.soilHealthCard, description: t.soilHealthCardDesc },
+    { id: 10, icon: '🎓', title: t.scholarships, description: t.scholarshipsDesc },
+  ], [t]);
+
+  const handlePress = async (topic: typeof topics[0]) => {
+    if (speakingId === topic.id) {
+      stopSpeaking();
+      setSpeakingId(null);
+      return;
+    }
+
+    stopSpeaking();
+    setSpeakingId(topic.id);
+
+    await speak(`${topic.title}. ${topic.description}`, language);
+
+    setSpeakingId(null);
+  };
+
+  // stop speech when leaving screen
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
@@ -50,41 +72,42 @@ function GovernmentScreen({ navigation }: GovernmentScreenProps): React.JSX.Elem
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <TouchableOpacity
+          accessibilityLabel={t.back}
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>← {t.back}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerContent}>
           <Text style={styles.headerIcon}>🏛️</Text>
-          <Text style={[styles.headerTitle, { color: textColor }]}>Government</Text>
+          <Text style={[styles.headerTitle, { color: textColor }]}>{t.government}</Text>
           <Text style={[styles.headerSubtitle, { color: subtitleColor }]}>
-            Government Schemes & Benefits
+            {t.governmentDesc}
           </Text>
         </View>
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* Info Box */}
         <View style={[styles.infoBox, { backgroundColor: infoBg }]}>
           <Text style={styles.infoIcon}>ℹ️</Text>
           <Text style={[styles.infoText, { color: infoTextColor }]}>
-            Tap any scheme to learn more about eligibility, documents needed, and how to apply
+            {t.schemeInfo}
           </Text>
         </View>
 
         {topics.map((topic) => (
           <TouchableOpacity
             key={topic.id}
-            style={[styles.topicCard, { backgroundColor: cardBackground }]}
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log(topic.title);
-              // future: voice guidance & eligibility explanation
-            }}
+            activeOpacity={0.75}
+            style={[
+              styles.topicCard,
+              { backgroundColor: cardBackground },
+              speakingId === topic.id && styles.playingCard,
+            ]}
+            onPress={() => handlePress(topic)}
           >
             <View style={[styles.topicIconContainer, { backgroundColor: iconBg }]}>
               <Text style={styles.topicIcon}>{topic.icon}</Text>
@@ -99,44 +122,30 @@ function GovernmentScreen({ navigation }: GovernmentScreenProps): React.JSX.Elem
               </Text>
             </View>
 
-            <Text style={styles.arrow}>→</Text>
+            {speakingId === topic.id ? (
+              <Icon name="stop-circle" size={28} color="#F44336" />
+            ) : (
+              <Icon name="play-circle" size={28} color="#4CAF50" />
+            )}
           </TouchableOpacity>
         ))}
-
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+export default GovernmentScreen;
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-
+  header: { padding: 20, borderBottomWidth: 1 },
   backButton: { marginBottom: 15 },
-
-  backButtonText: {
-    fontSize: 16,
-    color: '#FF9800',
-    fontWeight: '500',
-  },
+  backButtonText: { fontSize: 16, color: '#FF9800', fontWeight: '500' },
 
   headerContent: { alignItems: 'center' },
-
-  headerIcon: {
-    fontSize: 50,
-    marginBottom: 10,
-  },
-
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-
+  headerIcon: { fontSize: 50, marginBottom: 10 },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: 5 },
   headerSubtitle: { fontSize: 14 },
 
   content: { flex: 1, padding: 15 },
@@ -149,16 +158,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  infoIcon: {
-    fontSize: 24,
-    marginRight: 10,
-  },
-
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-  },
+  infoIcon: { fontSize: 24, marginRight: 10 },
+  infoText: { flex: 1, fontSize: 13, lineHeight: 18 },
 
   topicCard: {
     flexDirection: 'row',
@@ -167,6 +168,12 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 12,
     elevation: 2,
+  },
+
+  playingCard: {
+    borderWidth: 2,
+    borderColor: '#FF9800',
+    elevation: 5,
   },
 
   topicIconContainer: {
@@ -179,24 +186,8 @@ const styles = StyleSheet.create({
   },
 
   topicIcon: { fontSize: 25 },
-
   topicContent: { flex: 1 },
 
-  topicTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 3,
-  },
-
-  topicDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  arrow: {
-    fontSize: 20,
-    color: '#FF9800',
-  },
+  topicTitle: { fontSize: 16, fontWeight: '600', marginBottom: 3 },
+  topicDescription: { fontSize: 13, lineHeight: 18 },
 });
-
-export default GovernmentScreen;

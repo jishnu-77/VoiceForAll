@@ -50,8 +50,8 @@ const getGeminiKeys = (): string[] => {
   const key1 = getGeminiApiKey1();
   const key2 = getGeminiApiKey2();
   return [
-    key1 || 'AIzaSyD_dIQlvIHFWGGtTHT8y1yEySVvHDUUia4',
-    key2 || 'AIzaSyAIOUxiXXXT1vVm7MdFxnlM4D7iUDjDQ6E',
+    key1 || '',
+    key2 || '',
   ];
 };
 

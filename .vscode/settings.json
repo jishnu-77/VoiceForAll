@@ -1,0 +1,11 @@
+{
+  "java.import.exclusions": [
+    "**/node_modules/**",
+    "**/android/**",
+    "**/.git/**",
+    "**/build/**"
+  ],
+  "java.project.sourcePaths": [],
+  "java.configuration.updateBuildConfiguration": "disabled",
+  "java.autobuild.enabled": false
+}

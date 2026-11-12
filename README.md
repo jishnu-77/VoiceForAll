@@ -1,97 +1,107 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
-# Getting Started
+# VoiceForAll 🌍
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+### Regional Language Content Creator for Everyone
 
-## Step 1: Start Metro
+VoiceForAll is a React Native mobile application designed to make important information accessible to people who face difficulties reading text-based content.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+The application converts text-based information into speech in multiple Indian regional languages, helping users access useful information through audio.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 🎯 Project Objective
 
-```sh
-# Using npm
-npm start
+To make information more accessible by reducing language and literacy barriers, particularly in areas such as agriculture, healthcare, government schemes and education.
 
-# OR using Yarn
-yarn start
-```
+## ✨ Key Features
 
-## Step 2: Build and run your app
+- **Multilingual Support:** English, Hindi, Malayalam, Tamil, Telugu, Marathi and Bengali.
+- **Text-to-Speech:** Converts written content into audio using React Native TTS.
+- **Agriculture Information:** Provides accessible farming-related information.
+- **Healthcare Information:** Makes useful health information available through audio.
+- **Government Schemes:** Helps users access information about government initiatives.
+- **Education:** Provides educational content in regional languages.
+- **Offline-First Approach:** Uses locally stored JSON content when internet connectivity is unavailable.
+- **Local Caching:** Uses AsyncStorage to improve content accessibility.
+- **Cloud Integration:** Uses Firebase Firestore for cloud-based data synchronization.
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## 🛠️ Technology Stack
 
-### Android
+| Technology | Purpose |
+|---|---|
+| React Native CLI | Mobile application development |
+| TypeScript | Application logic |
+| React Native TTS | Text-to-speech functionality |
+| Firebase Firestore | Cloud database and synchronization |
+| AsyncStorage | Local data storage and caching |
+| JSON | Offline content management |
 
-```sh
-# Using npm
-npm run android
+## 🏗️ Application Architecture
 
-# OR using Yarn
-yarn android
-```
+VoiceForAll follows an offline-first approach.
 
-### iOS
+- Local JSON files provide fallback content.
+- AsyncStorage maintains locally cached information.
+- Firebase Firestore supports cloud data synchronization.
+- React Native TTS converts available text content into speech.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## 🌐 Supported Languages
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+- English
+- Hindi
+- Malayalam
+- Tamil
+- Telugu
+- Marathi
+- Bengali
 
-```sh
-bundle install
-```
+## 🚀 Getting Started
 
-Then, and every time you update your native dependencies, run:
+### Prerequisites
 
-```sh
-bundle exec pod install
-```
+- Node.js
+- React Native development environment
+- Android Studio and Android SDK
+- JDK 17
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### Installation
 
-```sh
-# Using npm
-npm run ios
+1. Clone the repository:
 
-# OR using Yarn
-yarn ios
-```
+   ```bash
+   git clone https://github.com/jishnu-77/VoiceForAll.git
+   ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+2. Navigate to the project directory:
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+   ```bash
+   cd VoiceForAll
+   ```
 
-## Step 3: Modify your app
+3. Install dependencies:
 
-Now that you have successfully run the app, let's make changes!
+   ```bash
+   npm install
+   ```
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+4. Start Metro:
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+   ```bash
+   npm start
+   ```
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+5. Run the Android application in another terminal:
 
-## Congratulations! :tada:
+   ```bash
+   npm run android
+   ```
 
-You've successfully run and modified your React Native App. :partying_face:
+## 👨‍💻 Developed By
 
-### Now what?
+**Jishnu V**
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+MCA Graduate | AI & Machine Learning
 
-# Troubleshooting
+GitHub: https://github.com/jishnu-77
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+---
 
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+*VoiceForAll – Making information accessible through language and voice.*
